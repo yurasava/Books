@@ -2,20 +2,24 @@ package io.github.yurasava.bookservice.controller;
 
 import io.github.yurasava.bookservice.entities.Book;
 import io.github.yurasava.bookservice.service.BookService;
+import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Controller;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Scanner;
 
 @Controller
 public class RequestDispatcher {
     private final BookService bookService;
+    private final MessageSource messageSource;
 
-    public RequestDispatcher(BookService bookService) {
+    public RequestDispatcher(BookService bookService, MessageSource messageSource) {
         this.bookService = bookService;
+        this.messageSource = messageSource;
     }
 
-    public void doDispatch(int userInput) {
+    public void doDispatch(int userInput, Locale locale) {
 
         List<Book> books = bookService.getAllBooks();
         Scanner scanner = new Scanner(System.in);
@@ -26,59 +30,63 @@ public class RequestDispatcher {
                 books.forEach(System.out::println);
                 break;
             case 2:
-                addBook(scanner, book);
+                addBook(scanner, book, locale);
                 break;
             case 3:
-                editBook(scanner, book);
+                editBook(scanner, book, locale);
                 break;
             case 4:
-                deleteBook(scanner);
+                deleteBook(scanner, locale);
                 break;
             case 0:
-                System.out.println("До свидания!");
+                showMessage("Farewell", locale);
                 System.exit(0);
             default:
-                System.out.println("Неверная комманда!");
+                showMessage("InvalidCommand", locale);
                 break;
         }
     }
 
-    private void addBook(Scanner scanner, Book book) {
-        System.out.println("Введите название книги: ");
+    private void addBook(Scanner scanner, Book book, Locale locale) {
+        showMessage("EnteringTitle", locale);
         book.setTitle(scanner.nextLine());
-        System.out.println("Введите автора книги: ");
+        showMessage("EnteringAuthor", locale);
         book.setAuthor(scanner.nextLine());
-        System.out.println("Введите описание книги: ");
+        showMessage("EnteringDescription", locale);
         book.setDescription(scanner.nextLine());
         bookService.createNewBook(book);
-        System.out.println("Книга успешно добавлена!");
+        showMessage("BookAdded", locale);
     }
 
-    private void editBook(Scanner scanner, Book book) {
-        System.out.println("Введите id книги: ");
+    private void editBook(Scanner scanner, Book book, Locale locale) {
+        showMessage("EnteringBookId", locale);
         long id = scanner.nextLong();
         if (bookService.getBookById(id).isEmpty()) {
-            System.out.println("Книга с таким id не найдена!");
+            showMessage("BookIdNotFound", locale);
             return;
         }
-        System.out.println("Введите название книги: ");
+        showMessage("EnteringTitle", locale);
         book.setTitle(scanner.nextLine());
-        System.out.println("Введите автора книги: ");
+        showMessage("EnteringAuthor", locale);
         book.setAuthor(scanner.nextLine());
-        System.out.println("Введите описание книги: ");
+        showMessage("EnteringDescription", locale);
         book.setDescription(scanner.nextLine());
         bookService.editBook(id, book);
-        System.out.println("Книга успешно отредактирована!");
+        showMessage("BookEdited", locale);
     }
 
-    private void deleteBook(Scanner scanner) {
-        System.out.println("Введите id книги для удаления: ");
+    private void deleteBook(Scanner scanner, Locale locale) {
+        showMessage("EnteringBookIdToDelete", locale);
         long id = scanner.nextLong();
         if (bookService.getBookById(id).isEmpty()) {
-            System.out.println("Книга с таким id не найдена!");
+            showMessage("BookIdNotFound", locale);
             return;
         }
         bookService.deleteBook(id);
-        System.out.println("Книга успешно удалена!");
+        showMessage("BookDeleted", locale);
+    }
+
+    private void showMessage(String message, Locale locale) {
+        System.out.println(messageSource.getMessage(message, null, locale));
     }
 }
